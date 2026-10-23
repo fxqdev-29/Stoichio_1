@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stoichio</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #1c2029; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.6; font-size: 16px; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+  header { border-bottom: 1px solid #e5e9f0; padding: 18px 0; background: #fff; position: sticky; top: 0; z-index: 5; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .brand { font-size: 1.15rem; font-weight: 700; color: #1c2029; text-decoration: none; }
+  nav a { color: #57607a; text-decoration: none; margin-left: 22px; font-size: 0.94rem; }
+  nav a:hover { color: #0d8a66; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 40px 0 8px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 10px; }
+  h3 { font-size: 1rem; margin: 20px 0 6px; }
+  p { margin: 0 0 12px; color: #3a4053; }
+  .sub { color: #6b7280; font-size: 0.95rem; }
+  section { padding: 8px 0 24px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  input[type=text] { flex: 1 1 320px; min-width: 0; padding: 11px 14px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 15px; border: 1px solid #d8dee8; border-radius: 8px; background: #fff; }
+  input[type=text]:focus { outline: none; border-color: #0d8a66; box-shadow: 0 0 0 3px rgba(13,138,102,.12); }
+  button { font-family: inherit; font-size: 15px; font-weight: 600; padding: 10px 18px; border-radius: 8px; border: 1px solid #0d8a66; background: #0d8a66; color: #fff; cursor: pointer; }
+  button:hover { background: #0a7054; border-color: #0a7054; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 20px; }
+  .chips .label { color: #6b7280; font-size: 0.88rem; align-self: center; margin-right: 4px; }
+  .chip { background: #f4f7fb; color: #3a4053; border: 1px solid #e0e6ef; padding: 6px 12px; border-radius: 999px; font-size: 13px; cursor: pointer; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  .chip:hover { border-color: #0d8a66; color: #0d8a66; background: #eef8f4; }
+  .out { margin-top: 6px; padding: 16px 18px; background: #f4faf7; border: 1px solid #d4ebe0; border-radius: 10px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 15px; white-space: pre-wrap; word-break: break-word; color: #17402f; display: none; }
+  .out.on { display: block; }
+  .out.err { background: #fdf3f0; border-color: #f4d3c6; color: #8a3a1c; font-family: system-ui, sans-serif; font-size: 14px; }
+  .out table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+  .out th, .out td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #d4ebe0; font-size: 13px; }
+  .out th { font-weight: 600; color: #4a5266; text-transform: uppercase; letter-spacing: 0.03em; font-size: 11px; }
+  .out h4 { margin: 14px 0 4px; font-family: system-ui, sans-serif; font-size: 14px; color: #0a7054; }
+  .big { font-size: 18px; margin: 4px 0 10px; color: #0a7054; }
+  footer { margin-top: 60px; padding: 24px 0; border-top: 1px solid #e5e9f0; color: #6b7280; font-size: 0.9rem; text-align: center; }
+  .ptable { display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); gap: 3px; margin: 16px 0; font-size: 10px; }
+  .ptable .el { aspect-ratio: 1; background: #f4f7fb; border: 1px solid #e0e6ef; border-radius: 4px; padding: 3px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; overflow: hidden; }
+  .ptable .el:hover { background: #eef8f4; border-color: #0d8a66; }
+  .ptable .el.empty { background: transparent; border: none; cursor: default; }
+  .ptable .sym { font-weight: 700; font-size: 11px; color: #1c2029; }
+  .ptable .num { color: #8892a4; font-size: 9px; }
+  .ptable .mass { color: #57607a; font-size: 8px; }
+  .ptable .el.g1 { background: #fef3f0; }
+  .ptable .el.g2 { background: #fff8e6; }
+  .ptable .el.g3 { background: #eef6ff; }
+  .ptable .el.g4 { background: #f0f6ee; }
+  .ptable .el.g5 { background: #f5efff; }
+  .ptable .el.g6 { background: #eafaf6; }
+  .ptable .el.g7 { background: #fdf0f4; }
+  .ptable .el.g8 { background: #f4f4f8; }
+  .selected-el { margin-top: 12px; padding: 16px 18px; background: #f4faf7; border: 1px solid #d4ebe0; border-radius: 10px; display: none; font-size: 14px; }
+  .selected-el.on { display: block; }
+  .selected-el .el-head { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+  .selected-el .el-symbol { width: 52px; height: 52px; background: #0d8a66; color: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; }
+  .selected-el .el-name { font-size: 16px; font-weight: 700; color: #1c2029; }
+  .selected-el .el-meta { font-size: 12px; color: #57607a; }
+  .selected-el .el-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .selected-el .el-stats > div { background: #fff; border: 1px solid #d4ebe0; border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; }
+  .selected-el .k { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; }
+  .selected-el .v { font-size: 13px; color: #1c2029; font-weight: 600; }
+  .selected-el .el-desc { color: #3a4053; font-size: 13px; line-height: 1.5; margin: 0 0 12px; }
+  .selected-el .el-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .selected-el button { font-family: inherit; font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 6px; cursor: pointer; border: 1px solid #d8dee8; background: #fff; color: #3a4053; }
+  .selected-el button:hover { border-color: #0d8a66; color: #0d8a66; background: #eef8f4; }
+  .selected-el button.el-insert { background: #0d8a66; border-color: #0d8a66; color: #fff; }
+  .selected-el button.el-insert:hover { background: #0a7054; border-color: #0a7054; }
+  .selected-el button:disabled { opacity: 0.7; cursor: default; }
+  @media (max-width: 600px) {
+    nav a { margin-left: 14px; font-size: 0.88rem; }
+    h1 { font-size: 1.5rem; }
+    .ptable { font-size: 8px; }
+    .ptable .sym { font-size: 9px; }
+    .ptable .mass { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a href="#" class="brand">Stoichio</a>
+    <nav>
+      <a href="#balance">Balance</a>
+      <a href="#mass">Molar mass</a>
+      <a href="#predict">Find products</a>
+      <a href="#periodic">Periodic table</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <h1>Balance a chemical equation</h1>
+  <p class="sub">Type a reaction like <code>C3H8 + O2 -> CO2 + H2O</code>. Any arrow works: <code>-></code>, <code>=</code>, <code>→</code>. Subscripts are plain numbers: <code>H2O</code>, <code>Fe2(SO4)3</code>. Hydrates like <code>CuSO4·5H2O</code> work too.</p>
+
+  <section id="balance">
+    <div class="row">
+      <input type="text" id="eq" placeholder="C3H8 + O2 -> CO2 + H2O" autocomplete="off" spellcheck="false">
+      <button onclick="doBalance()">Balance</button>
+    </div>
+    <div class="chips">
+      <span class="label">Examples:</span>
+      <span class="chip" onclick="fillEq(this)">C3H8 + O2 -> CO2 + H2O</span>
+      <span class="chip" onclick="fillEq(this)">Fe + O2 -> Fe2O3</span>
+      <span class="chip" onclick="fillEq(this)">H2 + O2 -> H2O</span>
+      <span class="chip" onclick="fillEq(this)">Ca(OH)2 + H3PO4 -> Ca3(PO4)2 + H2O</span>
+      <span class="chip" onclick="fillEq(this)">KMnO4 + HCl -> KCl + MnCl2 + H2O + Cl2</span>
+      <span class="chip" onclick="fillEq(this)">NaHCO3 -> Na2CO3 + H2O + CO2</span>
+      <span class="chip" onclick="fillEq(this)">AgNO3 + NaCl -> AgCl + NaNO3</span>
+    </div>
+    <div id="out" class="out"></div>
+  </section>
+
+  <h2 id="predict">Find the products</h2>
+  <p class="sub">Type the reactants. The site matches them against common reaction types and proposes likely products. Use this as a starting point, then check it by hand.</p>
+  <section>
+    <div class="row">
+      <input type="text" id="reactants" placeholder="e.g. CH4 + O2, or CaCO3, or HCl + NaOH" autocomplete="off" spellcheck="false">
+      <button onclick="doPredict()">Find products</button>
+    </div>
+    <div class="chips">
+      <span class="label">Examples:</span>
+      <span class="chip" onclick="fillReact(this)">CH4 + O2</span>
+      <span class="chip" onclick="fillReact(this)">HCl + NaOH</span>
+      <span class="chip" onclick="fillReact(this)">AgNO3 + NaCl</span>
+      <span class="chip" onclick="fillReact(this)">Zn + HCl</span>
+      <span class="chip" onclick="fillReact(this)">CaCO3</span>
+      <span class="chip" onclick="fillReact(this)">H2 + O2</span>
+    </div>
+    <div id="pout" class="out"></div>
+  </section>
+
+  <h2 id="mass">Molar mass</h2>
+  <p class="sub">Enter any formula. You get the total and a per element breakdown.</p>
+  <section>
+    <div class="row">
+      <input type="text" id="formula" placeholder="C6H12O6" autocomplete="off" spellcheck="false">
+      <button onclick="doMass()">Calculate</button>
+    </div>
+    <div class="chips">
+      <span class="label">Examples:</span>
+      <span class="chip" onclick="fillFormula(this)">C6H12O6</span>
+      <span class="chip" onclick="fillFormula(this)">NaCl</span>
+      <span class="chip" onclick="fillFormula(this)">CuSO4·5H2O</span>
+      <span class="chip" onclick="fillFormula(this)">Ca(NO3)2</span>
+      <span class="chip" onclick="fillFormula(this)">H2SO4</span>
+    </div>
+    <div id="mout" class="out"></div>
+  </section>
+
+  <h2 id="periodic">Periodic table</h2>
+  <p class="sub">Click any element to see its name, category, atomic mass, melting point, boiling point, density, and a short description.</p>
+  <div class="ptable" id="ptable"></div>
+  <div class="selected-el" id="selected"></div>
+
+  <h2>How it works</h2>
+
+  <h3>Balancing an equation</h3>
+  <p>Every chemical formula is really a list of atoms. H2O means two hydrogens and one oxygen. The balancer reads each formula, counts atoms of every element, and writes them into a grid: one row per element, one column per species. Reactants count as positive numbers. Products count as negative numbers.</p>
+  <p>Then it looks for a set of coefficients that makes every row add up to zero. That is what "balanced" means: the same number of each atom on both sides. The math used is called Gaussian elimination, but you do not need to know it. The site just solves the grid and gives you whole numbers, because fractions like 1/2 O2 are usually written as whole numbers in textbooks.</p>
+  <p>Example. For C3H8 + O2 -> CO2 + H2O, the site finds 1 propane, 5 O2, 3 CO2, and 4 H2O. Check carbon: 3 on the left, 3 on the right. Check hydrogen: 8 on the left, 8 on the right. Check oxygen: 10 on the left, 10 on the right. Balanced.</p>
+
+  <h3>Calculating molar mass</h3>
+  <p>Each element has an atomic mass. Hydrogen is 1.008, carbon is 12.011, oxygen is 15.999. To get the molar mass of a formula, multiply each element's atomic mass by how many atoms of it appear, then add everything up. For H2O: (2 × 1.008) + (1 × 15.999) = 18.015 g/mol. That number is how many grams one mole of the substance weighs.</p>
+
+  <h3>Why does the arrow matter?</h3>
+  <p>The arrow separates reactants from products. The site accepts several forms: <code>-></code>, <code>=</code>, <code>→</code>, <code>⟶</code>, and a few others. If it cannot find one, it tells you what it saw and shows an example.</p>
+
+  <h3>Predicting products</h3>
+  <p>The "Find the products" tool works differently. It looks at the reactants you type and matches them against a database of known reaction types: combustion, single replacement, double replacement, synthesis, decomposition, and acid base neutralisation. If it finds a match, it proposes plausible products. This is a shortcut, not real chemistry. It cannot know every reaction, and it will get some exotic cases wrong. Use it as a starting point, then check the result by hand.</p>
+
+</main>
+
+<footer>
+  <div class="wrap">Stoichio. Free, no sign up, no tracking.</div>
+</footer>
+
+<script>
+/* ---------- Periodic table data ---------- */
+const ELEMENTS = [
+  [1,"H",1.008,"g1",1,1,"Hydrogen","Nonmetal",-259.14,-252.87,0.0899,"The lightest element. Fuels stars. Burns with oxygen to make water."],
+  [2,"He",4.0026,"g8",1,18,"Helium","Noble gas",-272.2,-268.93,0.1786,"Does not react with anything. Used in balloons and cooling magnets."],
+  [3,"Li",6.94,"g1",2,1,"Lithium","Alkali metal",180.54,1342,0.534,"Soft metal that reacts with water. Powers lithium-ion batteries."],
+  [4,"Be",9.0122,"g2",2,2,"Beryllium","Alkaline earth metal",1287,2469,1.85,"Light and stiff. Toxic dust. Used in aerospace alloys."],
+  [5,"B",10.81,"g3",2,13,"Boron","Metalloid",2076,3927,2.34,"Found in borax and glass. Absorbs neutrons."],
+  [6,"C",12.011,"g4",2,14,"Carbon","Nonmetal",3550,4027,2.267,"Backbone of all life. Forms diamond, graphite, and every organic molecule."],
+  [7,"N",14.007,"g5",2,15,"Nitrogen","Nonmetal",-210.1,-195.79,1.251,"78 percent of the air. Bonds so strongly it barely reacts."],
+  [8,"O",15.999,"g5",2,16,"Oxygen","Nonmetal",-218.79,-182.96,1.429,"Supports breathing and fire. Most abundant element in Earth's crust."],
+  [9,"F",18.998,"g7",2,17,"Fluorine","Halogen",-219.67,-188.11,1.696,"Most reactive element. Attacks almost everything."],
+  [10,"Ne",20.180,"g8",2,18,"Neon","Noble gas",-248.59,-246.08,0.9002,"Glows orange in signs. Otherwise inert."],
+  [11,"Na",22.990,"g1",3,1,"Sodium","Alkali metal",97.79,882.9,0.968,"Half of table salt. Explodes in water."],
+  [12,"Mg",24.305,"g2",3,2,"Magnesium","Alkaline earth metal",650,1090,1.738,"Burns white hot. Central atom in chlorophyll."],
+  [13,"Al",26.982,"g3",3,13,"Aluminium","Post-transition metal",660.32,2519,2.70,"Most abundant metal in Earth's crust. Light and corrosion resistant."],
+  [14,"Si",28.085,"g4",3,14,"Silicon","Metalloid",1414,3265,2.33,"Base of computer chips and sand."],
+  [15,"P",30.974,"g5",3,15,"Phosphorus","Nonmetal",44.15,280.5,1.823,"Key to DNA and ATP. White phosphorus glows in air."],
+  [16,"S",32.06,"g5",3,16,"Sulfur","Nonmetal",115.21,444.72,2.07,"Smells like rotten eggs when bonded to hydrogen. Found near volcanoes."],
+  [17,"Cl",35.45,"g7",3,17,"Chlorine","Halogen",-101.5,-34.04,3.214,"Purifies pools. Toxic gas on its own."],
+  [18,"Ar",39.948,"g8",3,18,"Argon","Noble gas",-189.34,-185.85,1.784,"Fills light bulbs. Does not react."],
+  [19,"K",39.098,"g1",4,1,"Potassium","Alkali metal",63.5,759,0.862,"Vital for nerves. Burns purple. Reacts violently with water."],
+  [20,"Ca",40.078,"g2",4,2,"Calcium","Alkaline earth metal",842,1484,1.55,"Builds bones and shells. Limestone is calcium carbonate."],
+  [21,"Sc",44.956,"g3",4,3,"Scandium","Transition metal",1541,2836,2.985,"Rare. Strengthens aluminium alloys."],
+  [22,"Ti",47.867,"g3",4,4,"Titanium","Transition metal",1668,3287,4.506,"Strong, light, rust proof. Used in jet engines and implants."],
+  [23,"V",50.942,"g3",4,5,"Vanadium","Transition metal",1910,3407,6.11,"Hardens steel. Named after a Norse goddess."],
+  [24,"Cr",51.996,"g3",4,6,"Chromium","Transition metal",1907,2671,7.15,"Shiny plating. Also toxic in the wrong form."],
+  [25,"Mn",54.938,"g3",4,7,"Manganese","Transition metal",1246,2061,7.21,"Hardens steel. Needed for photosynthesis."],
+  [26,"Fe",55.845,"g3",4,8,"Iron","Transition metal",1538,2861,7.874,"Core of Earth. Main metal in steel. Carries oxygen in blood."],
+  [27,"Co",58.933,"g3",4,9,"Cobalt","Transition metal",1495,2927,8.90,"Blue pigment. Key in lithium batteries."],
+  [28,"Ni",58.693,"g3",4,10,"Nickel","Transition metal",1455,2913,8.908,"Used in coins and stainless steel."],
+  [29,"Cu",63.546,"g3",4,11,"Copper","Transition metal",1084.62,2562,8.96,"Conducts electricity. Wires and old roofs."],
+  [30,"Zn",65.38,"g3",4,12,"Zinc","Transition metal",419.53,907,7.14,"Galvanizes steel. Part of many enzymes."],
+  [31,"Ga",69.723,"g3",4,13,"Gallium","Post-transition metal",29.76,2204,5.91,"Melts in your hand. Used in LED lights."],
+  [32,"Ge",72.630,"g4",4,14,"Germanium","Metalloid",938.3,2833,5.323,"Early transistor material. Now used in fibre optics."],
+  [33,"As",74.922,"g5",4,15,"Arsenic","Metalloid",817,614,5.727,"Famous poison. Also used in semiconductors."],
+  [34,"Se",78.971,"g5",4,16,"Selenium","Nonmetal",221,685,4.81,"Needed in tiny amounts. Used in photocopiers."],
+  [35,"Br",79.904,"g7",4,17,"Bromine","Halogen",-7.2,58.8,3.1028,"One of two elements that are liquid at room temperature."],
+  [36,"Kr",83.798,"g8",4,18,"Krypton","Noble gas",-157.37,-153.22,3.749,"Used in some lasers and old camera flashes."],
+  [37,"Rb",85.468,"g1",5,1,"Rubidium","Alkali metal",39.3,688,1.532,"Ignites in air. Used in atomic clocks."],
+  [38,"Sr",87.62,"g2",5,2,"Strontium","Alkaline earth metal",777,1382,2.64,"Burns red in fireworks."],
+  [39,"Y",88.906,"g3",5,3,"Yttrium","Transition metal",1526,3336,4.472,"Used in LEDs and superconductors."],
+  [40,"Zr",91.224,"g3",5,4,"Zirconium","Transition metal",1855,4409,6.52,"Corrosion resistant. Cladding for nuclear fuel."],
+  [41,"Nb",92.906,"g3",5,5,"Niobium","Transition metal",2477,4744,8.57,"Strengthens steel. Superconducting magnets."],
+  [42,"Mo",95.95,"g3",5,6,"Molybdenum","Transition metal",2623,4639,10.28,"Strong at high temperatures. Used in steel."],
+  [43,"Tc",98,"g3",5,7,"Technetium","Transition metal",2157,4265,11,"First artificially made element. Used in medical scans."],
+  [44,"Ru",101.07,"g3",5,8,"Ruthenium","Transition metal",2334,4150,12.37,"Hardens platinum. Used in electronics."],
+  [45,"Rh",102.91,"g3",5,9,"Rhodium","Transition metal",1964,3695,12.45,"Catalytic converters. Very expensive."],
+  [46,"Pd",106.42,"g3",5,10,"Palladium","Transition metal",1554.9,2963,12.023,"Absorbs hydrogen. Catalysts."],
+  [47,"Ag",107.87,"g3",5,11,"Silver","Transition metal",961.78,2162,10.49,"Best conductor. Kills bacteria."],
+  [48,"Cd",112.41,"g3",5,12,"Cadmium","Transition metal",321.07,767,8.65,"Toxic. Used in old batteries and yellow pigments."],
+  [49,"In",114.82,"g3",5,13,"Indium","Post-transition metal",156.6,2072,7.31,"Used in touchscreens and solder."],
+  [50,"Sn",118.71,"g3",5,14,"Tin","Post-transition metal",231.93,2602,7.31,"Alloyed with copper to make bronze."],
+  [51,"Sb",121.76,"g5",5,15,"Antimony","Metalloid",630.63,1587,6.697,"Flame retardant. Ancient cosmetic."],
+  [52,"Te",127.60,"g5",5,16,"Tellurium","Metalloid",449.51,988,6.24,"Rare. Used in solar panels."],
+  [53,"I",126.90,"g7",5,17,"Iodine","Halogen",113.7,184.3,4.933,"Needed by the thyroid. Purple vapour."],
+  [54,"Xe",131.29,"g8",5,18,"Xenon","Noble gas",-111.8,-108.1,5.894,"Used in bright lamps and ion thrusters."],
+  [55,"Cs",132.91,"g1",6,1,"Caesium","Alkali metal",28.44,671,1.93,"Most reactive metal. Defines the second."],
+  [56,"Ba",137.33,"g2",6,2,"Barium","Alkaline earth metal",727,1897,3.51,"Green in fireworks. Used in medical scans."],
+  [57,"La",138.91,"g3",6,3,"Lanthanum","Lanthanide",920,3464,6.162,"Used in camera lenses and batteries."],
+  [58,"Ce",140.12,"g3",6,4,"Cerium","Lanthanide",795,3443,6.770,"Sparks in lighter flints. Polishes glass."],
+  [59,"Pr",140.91,"g3",6,5,"Praseodymium","Lanthanide",935,3520,6.77,"Colours glass green. Used in magnets."],
+  [60,"Nd",144.24,"g3",6,6,"Neodymium","Lanthanide",1024,3074,7.01,"Strongest permanent magnets."],
+  [61,"Pm",145,"g3",6,7,"Promethium","Lanthanide",1042,3000,7.26,"Radioactive. Used in old glow-in-the-dark paint."],
+  [62,"Sm",150.36,"g3",6,8,"Samarium","Lanthanide",1072,1794,7.52,"Magnets used in headphones."],
+  [63,"Eu",151.96,"g3",6,9,"Europium","Lanthanide",826,1529,5.264,"Red phosphor in old TV screens."],
+  [64,"Gd",157.25,"g3",6,10,"Gadolinium","Lanthanide",1312,3273,7.90,"Contrast agent for MRI scans."],
+  [65,"Tb",158.93,"g3",6,11,"Terbium","Lanthanide",1356,3230,8.23,"Green phosphor. Used in magnets."],
+  [66,"Dy",162.50,"g3",6,12,"Dysprosium","Lanthanide",1407,2562,8.54,"Improves magnet strength at high temperatures."],
+  [67,"Ho",164.93,"g3",6,13,"Holmium","Lanthanide",1474,2700,8.79,"Used in medical lasers."],
+  [68,"Er",167.26,"g3",6,14,"Erbium","Lanthanide",1529,2868,9.066,"Amplifies light in fibre optic cables."],
+  [69,"Tm",168.93,"g3",6,15,"Thulium","Lanthanide",1545,1950,9.32,"Rarest stable lanthanide. Used in portable X-rays."],
+  [70,"Yb",173.05,"g3",6,16,"Ytterbium","Lanthanide",824,1196,6.90,"Used in atomic clocks."],
+  [71,"Lu",174.97,"g3",6,17,"Lutetium","Lanthanide",1652,3402,9.841,"Used in cancer treatment."],
+  [72,"Hf",178.49,"g3",6,18,"Hafnium","Transition metal",2233,4603,13.31,"Absorbs neutrons. Used in nuclear control rods."],
+  [73,"Ta",180.95,"g3",7,1,"Tantalum","Transition metal",3017,5458,16.69,"Used in capacitors and surgical implants."],
+  [74,"W",183.84,"g3",7,2,"Tungsten","Transition metal",3422,5555,19.25,"Highest melting point of any metal. Light bulb filaments."],
+  [75,"Re",186.21,"g3",7,3,"Rhenium","Transition metal",3186,5596,21.02,"Rare. Used in jet engine alloys."],
+  [76,"Os",190.23,"g3",7,4,"Osmium","Transition metal",3033,5012,22.59,"Densest natural element."],
+  [77,"Ir",192.22,"g3",7,5,"Iridium","Transition metal",2466,4428,22.56,"Rarest stable metal. Found in meteorites."],
+  [78,"Pt",195.08,"g3",7,6,"Platinum","Transition metal",1768.3,3825,21.45,"Catalytic converters. Jewellery. Very expensive."],
+  [79,"Au",196.97,"g3",7,7,"Gold","Transition metal",1064.18,2856,19.30,"Does not tarnish. Conducts well. Ancient money."],
+  [80,"Hg",200.59,"g3",7,8,"Mercury","Transition metal",-38.83,356.73,13.534,"Only metal that is liquid at room temperature. Toxic."],
+  [81,"Tl",204.38,"g3",7,9,"Thallium","Post-transition metal",304,1473,11.85,"Extremely toxic. Historic poison."],
+  [82,"Pb",207.2,"g3",7,10,"Lead","Post-transition metal",327.46,1749,11.34,"Dense. Toxic. Used to be in pipes and paint."],
+  [83,"Bi",208.98,"g3",7,11,"Bismuth","Post-transition metal",271.4,1564,9.78,"Forms colourful crystals. Used in Pepto-Bismol."],
+  [84,"Po",209,"g5",7,12,"Polonium","Metalloid",254,962,9.196,"Radioactive. Discovered by Marie Curie."],
+  [85,"At",210,"g7",7,13,"Astatine","Halogen",302,337,7,"Extremely rare. Fewer than 30 grams exist on Earth at once."],
+  [86,"Rn",222,"g8",7,14,"Radon","Noble gas",-71,-61.7,9.73,"Radioactive gas. Seeps from soil in some basements."],
+  [87,"Fr",223,"g1",8,1,"Francium","Alkali metal",27,677,1.87,"Most unstable natural element. Exists for minutes at a time."],
+  [88,"Ra",226,"g2",8,2,"Radium","Alkaline earth metal",700,1737,5.5,"Glows in the dark. Historic glow paint. Very radioactive."],
+  [89,"Ac",227,"g3",8,3,"Actinium","Actinide",1050,3200,10.07,"Glows blue in the dark. Rare and radioactive."],
+  [90,"Th",232.04,"g3",8,4,"Thorium","Actinide",1750,4788,11.72,"Possible nuclear fuel. Named after Thor."],
+  [91,"Pa",231.04,"g3",8,5,"Protactinium","Actinide",1568,4027,15.37,"Rare and radioactive."],
+  [92,"U",238.03,"g3",8,6,"Uranium","Actinide",1132.2,4131,19.1,"Fuels nuclear reactors. Radioactive metal."]
+];
+const PT = {};
+ELEMENTS.forEach(e => PT[e[1]] = e[2]);
+
+/* ---------- Formula parser ---------- */
+function parseFormula(formula) {
+  let i = 0;
+  function group() {
+    const comp = {};
+    while (i < formula.length) {
+      const ch = formula[i];
+      if (ch === '(' || ch === '[') {
+        i++;
+        const inner = group();
+        if (formula[i] !== ')' && formula[i] !== ']') throw new Error("Parenthesis mismatch in " + formula);
+        i++;
+        let n = 1, m = '';
+        while (i < formula.length && /\d/.test(formula[i])) m += formula[i++];
+        if (m) n = parseInt(m, 10);
+        for (const el in inner) comp[el] = (comp[el] || 0) + inner[el] * n;
+      } else if (ch === ')' || ch === ']') {
+        return comp;
+      } else if (/[A-Z]/.test(ch)) {
+        let sym = ch; i++;
+        while (i < formula.length && /[a-z]/.test(formula[i])) sym += formula[i++];
+        let n = '', num = 1;
+        while (i < formula.length && /\d/.test(formula[i])) n += formula[i++];
+        if (n) num = parseInt(n, 10);
+        comp[sym] = (comp[sym] || 0) + num;
+      } else if (/[\d\s]/.test(ch)) { i++; }
+      else throw new Error("Unexpected character '" + ch + "' in " + formula);
+    }
+    return comp;
+  }
+  const comp = group();
+  if (!Object.keys(comp).length) throw new Error("Empty formula: " + formula);
+  let mass = 0;
+  for (const el in comp) {
+    if (PT[el] === undefined) throw new Error("Unknown element: " + el);
+    mass += PT[el] * comp[el];
+  }
+  return { comp, mass };
+}
+
+function analyze(formula) {
+  formula = formula.trim();
+  if (!formula) throw new Error("Empty formula");
+  if (formula.includes('·') || formula.includes('*')) {
+    const parts = formula.split(/[·*]/);
+    const total = {}; let mass = 0;
+    for (let p of parts) {
+      p = p.trim();
+      let lead = 1;
+      const m = p.match(/^(\d+)(.+)$/);
+      if (m) { lead = parseInt(m[1], 10); p = m[2]; }
+      const r = parseFormula(p);
+      for (const el in r.comp) total[el] = (total[el] || 0) + r.comp[el] * lead;
+      mass += r.mass * lead;
+    }
+    return { comp: total, mass };
+  }
+  return parseFormula(formula);
+}
+
+function splitEquation(eq) {
+  const arrows = ['⟶','⟹','→','⇒','-->','==>','->','=>','='];
+  let idx = -1, chosen = null;
+  for (const a of arrows) {
+    const i = eq.indexOf(a);
+    if (i !== -1 && (idx === -1 || i < idx)) { idx = i; chosen = a; }
+  }
+  if (idx === -1) throw new Error("No arrow found. Use -> between reactants and products. Example: H2 + O2 -> H2O");
+  const left = eq.slice(0, idx).trim();
+  const right = eq.slice(idx + chosen.length).trim();
+  if (!left && !right) throw new Error("Both sides of the arrow are empty.");
+  if (!left) throw new Error("The left side of the arrow is empty. Add reactants before " + chosen + ". Example: H2 + O2 " + chosen + " H2O");
+  if (!right) throw new Error("The right side of the arrow is empty. Add products after " + chosen + ". Example: H2 + O2 " + chosen + " H2O");
+  return {
+    reactants: left.split('+').map(s => s.trim()).filter(Boolean),
+    products: right.split('+').map(s => s.trim()).filter(Boolean)
+  };
+}
+
+function stripCoefficient(sp) {
+  const m = sp.match(/^(\d+)\s*(.+)$/);
+  if (m) return { given: parseInt(m[1], 10), formula: m[2].trim() };
+  return { given: 1, formula: sp.trim() };
+}
+
+function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = b; b = a % b; a = t; } return a; }
+
+function balance(eq) {
+  const { reactants, products } = splitEquation(eq);
+  const rInfo = reactants.map(sp => { const { formula } = stripCoefficient(sp); const a = analyze(formula); return { formula, comp: a.comp, mass: a.mass }; });
+  const pInfo = products.map(sp => { const { formula } = stripCoefficient(sp); const a = analyze(formula); return { formula, comp: a.comp, mass: a.mass }; });
+
+  const elements = new Set();
+  rInfo.forEach(r => Object.keys(r.comp).forEach(e => elements.add(e)));
+  pInfo.forEach(p => Object.keys(p.comp).forEach(e => elements.add(e)));
+  const elList = [...elements];
+
+  const n = rInfo.length + pInfo.length;
+  const matrix = elList.map(el => [
+    ...rInfo.map(r => r.comp[el] || 0),
+    ...pInfo.map(p => -(p.comp[el] || 0))
+  ]);
+
+  const M = matrix.map(r => r.slice());
+  const pivots = [];
+  let row = 0;
+  for (let col = 0; col < n && row < M.length; col++) {
+    let p = -1;
+    for (let r = row; r < M.length; r++) if (Math.abs(M[r][col]) > 1e-10) { p = r; break; }
+    if (p === -1) continue;
+    [M[row], M[p]] = [M[p], M[row]];
+    const pv = M[row][col];
+    for (let c = 0; c < n; c++) M[row][c] /= pv;
+    for (let r = 0; r < M.length; r++) if (r !== row && Math.abs(M[r][col]) > 1e-10) {
+      const f = M[r][col];
+      for (let c = 0; c < n; c++) M[r][c] -= f * M[row][c];
+    }
+    pivots.push(col); row++;
+  }
+  const free = [];
+  for (let c = 0; c < n; c++) if (!pivots.includes(c)) free.push(c);
+  if (!free.length) throw new Error("No non-trivial solution exists. Double check the formulas.");
+
+  const sol = new Array(n).fill(0);
+  sol[free[0]] = 1;
+  pivots.forEach((pc, i) => sol[pc] = -M[i][free[0]]);
+
+  function rat(x) {
+    if (Math.abs(x) < 1e-9) return [0, 1];
+    const s = x < 0 ? -1 : 1; x = Math.abs(x);
+    let h1 = 1, h0 = 0, k1 = 0, k0 = 1, b = x;
+    for (let i = 0; i < 30; i++) {
+      const a = Math.floor(b);
+      const h2 = a * h1 + h0, k2 = a * k1 + k0;
+      if (Math.abs(x - h2 / k2) < 1e-9) return [s * h2, k2];
+      h0 = h1; h1 = h2; k0 = k1; k1 = k2;
+      if (b - a < 1e-9) break;
+      b = 1 / (b - a);
+    }
+    return [s * Math.round(x * 1e6), 1e6];
+  }
+  const rats = sol.map(rat);
+  let L = 1;
+  rats.forEach(r => { L = Math.abs(L * r[1]) / gcd(L, r[1]); });
+  let ints = rats.map(r => r[0] * (L / r[1]));
+  let g = ints.reduce((a, v) => gcd(a, v), 0) || 1;
+  ints = ints.map(v => v / g);
+  if (ints.filter(v => v < 0).length > ints.length / 2) ints = ints.map(v => -v);
+  if (ints.some(v => v < 0)) throw new Error("No all positive solution. Check the formulas.");
+
+  const rc = ints.slice(0, rInfo.length);
+  const pc = ints.slice(rInfo.length);
+  const fmt = (c, f) => c === 1 ? f : c + ' ' + f;
+  const balanced = rc.map((c, i) => fmt(c, rInfo[i].formula)).join(' + ')
+                 + ' → ' + pc.map((c, i) => fmt(c, pInfo[i].formula)).join(' + ');
+
+  return {
+    balanced,
+    elements: elList,
+    reactants: rInfo.map((r, i) => ({ formula: r.formula, coeff: rc[i], mass: r.mass, comp: r.comp })),
+    products: pInfo.map((p, i) => ({ formula: p.formula, coeff: pc[i], mass: p.mass, comp: p.comp }))
+  };
+}
+
+/* ---------- Reaction predictor ---------- */
+const COMMON = {
+  "HCl+NaOH": ["NaCl", "H2O"],
+  "HCl+KOH": ["KCl", "H2O"],
+  "H2SO4+NaOH": ["Na2SO4", "H2O"],
+  "HNO3+NaOH": ["NaNO3", "H2O"],
+  "CH3COOH+NaOH": ["CH3COONa", "H2O"],
+  "AgNO3+NaCl": ["AgCl", "NaNO3"],
+  "BaCl2+Na2SO4": ["BaSO4", "NaCl"],
+  "Pb(NO3)2+KI": ["PbI2", "KNO3"],
+  "CaCl2+Na2CO3": ["CaCO3", "NaCl"],
+  "HCl+Na2CO3": ["NaCl", "H2O", "CO2"],
+  "HCl+NaHCO3": ["NaCl", "H2O", "CO2"],
+  "Zn+HCl": ["ZnCl2", "H2"],
+  "Mg+HCl": ["MgCl2", "H2"],
+  "Fe+CuSO4": ["FeSO4", "Cu"],
+  "Zn+CuSO4": ["ZnSO4", "Cu"],
+  "Cu+AgNO3": ["Cu(NO3)2", "Ag"],
+  "H2+O2": ["H2O"],
+  "N2+H2": ["NH3"],
+  "Na+Cl2": ["NaCl"],
+  "Mg+O2": ["MgO"],
+  "Fe+O2": ["Fe2O3"],
+  "Al+O2": ["Al2O3"],
+  "S+O2": ["SO2"],
+  "C+O2": ["CO2"],
+  "CaO+H2O": ["Ca(OH)2"],
+  "SO3+H2O": ["H2SO4"],
+  "CO2+H2O": ["H2CO3"],
+  "H2O2": ["H2O", "O2"],
+  "CaCO3": ["CaO", "CO2"],
+  "NaHCO3": ["Na2CO3", "H2O", "CO2"],
+  "KClO3": ["KCl", "O2"],
+  "CH4+O2": ["CO2", "H2O"],
+  "C2H6+O2": ["CO2", "H2O"],
+  "C3H8+O2": ["CO2", "H2O"],
+  "C4H10+O2": ["CO2", "H2O"],
+  "C2H5OH+O2": ["CO2", "H2O"]
+};
+
+const SORTED_DB = {};
+for (const k in COMMON) SORTED_DB[k.split('+').sort().join('+')] = COMMON[k];
+
+function predictProducts(reactantString) {
+  const parts = reactantString.split('+').map(s => s.trim()).filter(Boolean);
+  if (!parts.length) throw new Error("Type at least one reactant, like CH4 + O2 or CaCO3.");
+  const key = parts.slice().sort().join('+');
+
+  if (SORTED_DB[key]) {
+    return { products: SORTED_DB[key], reason: "Matched a known reaction pattern in the database." };
+  }
+
+  if (parts.length === 2) {
+    const [a, b] = parts;
+    const isO2 = (s) => /^O2$/.test(s);
+    const isHydrocarbon = (s) => /^C\d*H\d*$/.test(s);
+    const isAlcohol = (s) => /^C\d*H\d*OH$/.test(s);
+    if ((isHydrocarbon(a) && isO2(b)) || (isHydrocarbon(b) && isO2(a))) {
+      return { products: ["CO2", "H2O"], reason: "Hydrocarbon combustion: any CxHy plus O2 makes CO2 and H2O." };
+    }
+    if ((isAlcohol(a) && isO2(b)) || (isAlcohol(b) && isO2(a))) {
+      return { products: ["CO2", "H2O"], reason: "Alcohol combustion: CxHyOH plus O2 makes CO2 and H2O." };
+    }
+  }
+
+  return null;
+}
+
+/* ---------- UI ---------- */
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function doBalance() {
+  const out = document.getElementById('out');
+  out.className = 'out on';
+  const eq = document.getElementById('eq').value.trim();
+  if (!eq) { out.className = 'out on err'; out.textContent = 'Type an equation first, or click an example below.'; return; }
+  try {
+    const r = balance(eq);
+    let html = '<h4>Balanced equation</h4><div class="big">' + esc(r.balanced) + '</div>';
+    html += '<h4>Atom check</h4><table><tr><th>Element</th><th>Left</th><th>Right</th><th>OK</th></tr>';
+    for (const el of r.elements) {
+      const l = r.reactants.reduce((s, x) => s + x.coeff * (x.comp[el] || 0), 0);
+      const rr = r.products.reduce((s, x) => s + x.coeff * (x.comp[el] || 0), 0);
+      html += '<tr><td>' + esc(el) + '</td><td>' + l + '</td><td>' + rr + '</td><td>' + (l === rr ? 'yes' : 'no') + '</td></tr>';
+    }
+    html += '</table><h4>Molar masses</h4><table><tr><th>Species</th><th>Coefficient</th><th>g/mol</th></tr>';
+    for (const x of r.reactants) html += '<tr><td>' + esc(x.formula) + '</td><td>' + x.coeff + '</td><td>' + x.mass.toFixed(3) + '</td></tr>';
+    for (const x of r.products) html += '<tr><td>' + esc(x.formula) + '</td><td>' + x.coeff + '</td><td>' + x.mass.toFixed(3) + '</td></tr>';
+    html += '</table>';
+    out.className = 'out on';
+    out.innerHTML = html;
+  } catch (e) {
+    out.className = 'out on err';
+    out.textContent = e.message;
+  }
+}
+
+function doPredict() {
+  const out = document.getElementById('pout');
+  out.className = 'out on';
+  const inp = document.getElementById('reactants').value.trim();
+  if (!inp) { out.className = 'out on err'; out.textContent = 'Type reactants first, or click an example below.'; return; }
+  try {
+    const r = predictProducts(inp);
+    if (!r) {
+      out.className = 'out on err';
+      out.textContent = "I could not match this reaction. Try a simpler set of reactants, or balance a known equation directly. Predicting works best for combustion, acid base reactions, single and double replacements, synthesis, and decomposition of carbonates, bicarbonates, and hydrogen peroxide.";
+      return;
+    }
+    const guess = inp + ' -> ' + r.products.join(' + ');
+    let html = '<h4>Likely products</h4><div class="big">' + esc(r.products.join(' + ')) + '</div>';
+    html += '<p style="color:#3a4053;font-family:system-ui,sans-serif;font-size:13px;margin:6px 0 10px">' + esc(r.reason) + '</p>';
+    html += '<h4>Try balancing</h4><div class="big">' + esc(guess) + '</div>';
+    html += '<p style="font-family:system-ui,sans-serif;font-size:13px"><button style="font-size:13px;padding:6px 12px;background:#fff;color:#0d8a66;border:1px solid #0d8a66" onclick="usePredicted(\'' + esc(guess).replace(/'/g, "\\'") + '\')">Send this to the balancer</button></p>';
+    out.className = 'out on';
+    out.innerHTML = html;
+  } catch (e) {
+    out.className = 'out on err';
+    out.textContent = e.message;
+  }
+}
+
+function usePredicted(text) {
+  document.getElementById('eq').value = text;
+  document.getElementById('balance').scrollIntoView({ behavior: 'smooth' });
+  doBalance();
+}
+
+function doMass() {
+  const out = document.getElementById('mout');
+  out.className = 'out on';
+  const f = document.getElementById('formula').value.trim();
+  if (!f) { out.className = 'out on err'; out.textContent = 'Type a formula first, like H2O or C6H12O6.'; return; }
+  try {
+    const r = analyze(f);
+    let html = '<h4>Molar mass of ' + esc(f) + '</h4><div class="big">' + r.mass.toFixed(3) + ' g/mol</div>';
+    html += '<table><tr><th>Element</th><th>Atoms</th><th>Atomic mass</th><th>Subtotal</th></tr>';
+    for (const el in r.comp) {
+      const c = r.comp[el];
+      html += '<tr><td>' + esc(el) + '</td><td>' + c + '</td><td>' + PT[el] + '</td><td>' + (PT[el] * c).toFixed(3) + '</td></tr>';
+    }
+    html += '</table>';
+    out.className = 'out on';
+    out.innerHTML = html;
+  } catch (e) {
+    out.className = 'out on err';
+    out.textContent = e.message;
+  }
+}
+
+function fillEq(el) { document.getElementById('eq').value = el.textContent; doBalance(); }
+function fillReact(el) { document.getElementById('reactants').value = el.textContent; doPredict(); }
+function fillFormula(el) { document.getElementById('formula').value = el.textContent; doMass(); }
+
+function renderPeriodic() {
+  const grid = document.getElementById('ptable');
+  const map = {};
+  ELEMENTS.forEach(e => { map[e[4] + '-' + e[5]] = e; });
+  for (let r = 1; r <= 8; r++) {
+    for (let c = 1; c <= 18; c++) {
+      const e = map[r + '-' + c];
+      const div = document.createElement('div');
+      if (e) {
+        div.className = 'el ' + e[3];
+        div.innerHTML = '<div class="num">' + e[0] + '</div><div class="sym">' + e[1] + '</div><div class="mass">' + e[2] + '</div>';
+        div.onclick = () => showElement(e);
+        div.title = e[6] + ' (' + e[1] + ')';
+      } else {
+        div.className = 'el empty';
+      }
+      grid.appendChild(div);
+    }
+  }
+}
+
+function showElement(e) {
+  const box = document.getElementById('selected');
+  box.className = 'selected-el on';
+  const mp = e[8] + ' °C';
+  const bp = e[9] + ' °C';
+  box.innerHTML =
+    '<div class="el-head"><div class="el-symbol">' + e[1] + '</div><div><div class="el-name">' + e[6] + '</div><div class="el-meta">Element #' + e[0] + ' · ' + e[7] + '</div></div></div>' +
+    '<div class="el-stats">' +
+      '<div><span class="k">Atomic mass</span><span class="v">' + e[2] + ' g/mol</span></div>' +
+      '<div><span class="k">Melting point</span><span class="v">' + mp + '</span></div>' +
+      '<div><span class="k">Boiling point</span><span class="v">' + bp + '</span></div>' +
+      '<div><span class="k">Density</span><span class="v">' + e[10] + ' g/cm³</span></div>' +
+    '</div>' +
+    '<p class="el-desc">' + e[11] + '</p>' +
+    '<div class="el-actions"><button type="button" class="el-insert" id="insert-btn">Add ' + e[1] + ' to formula</button><button type="button" class="el-close" id="close-btn">Close</button></div>';
+  document.getElementById('insert-btn').onclick = () => {
+    const f = document.getElementById('formula');
+    f.value += e[1];
+    f.focus();
+    const btn = document.getElementById('insert-btn');
+    btn.textContent = 'Added ' + e[1];
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = 'Add ' + e[1] + ' to formula'; btn.disabled = false; }, 900);
+  };
+  document.getElementById('close-btn').onclick = () => {
+    box.className = 'selected-el';
+    box.innerHTML = '';
+  };
+}
+
+renderPeriodic();
+document.getElementById('eq').value = 'C3H8 + O2 -> CO2 + H2O';
+document.getElementById('eq').addEventListener('keydown', e => { if (e.key === 'Enter') doBalance(); });
+document.getElementById('reactants').addEventListener('keydown', e => { if (e.key === 'Enter') doPredict(); });
+document.getElementById('formula').addEventListener('keydown', e => { if (e.key === 'Enter') doMass(); });
+doBalance();
+</script>
+</body>
+</html>
