@@ -88,6 +88,7 @@
       <a href="#mass">Molar mass</a>
       <a href="#predict">Find products</a>
       <a href="#periodic">Periodic table</a>
+      <a href="#faq">FAQ</a>
     </nav>
   </div>
 </header>
@@ -157,26 +158,26 @@
   <div class="ptable" id="ptable"></div>
   <div class="selected-el" id="selected"></div>
 
-  <h2>How it works</h2>
+<h2 id="faq">FAQ</h2>
 
-  <h3>Balancing an equation</h3>
-  <p>Every chemical formula is really a list of atoms. H2O means two hydrogens and one oxygen. The balancer reads each formula, counts atoms of every element, and writes them into a grid: one row per element, one column per species. Reactants count as positive numbers. Products count as negative numbers.</p>
-  <p>Then it looks for a set of coefficients that makes every row add up to zero. That is what "balanced" means: the same number of each atom on both sides. The math used is called Gaussian elimination, but you do not need to know it. The site just solves the grid and gives you whole numbers, because fractions like 1/2 O2 are usually written as whole numbers in textbooks.</p>
-  <p>Example. For C3H8 + O2 -> CO2 + H2O, the site finds 1 propane, 5 O2, 3 CO2, and 4 H2O. Check carbon: 3 on the left, 3 on the right. Check hydrogen: 8 on the left, 8 on the right. Check oxygen: 10 on the left, 10 on the right. Balanced.</p>
+<h3>What arrow can I use?</h3>
+<p>Any of these work: <code>-&gt;</code>, <code>=</code>, <code>→</code>, <code>⟶</code>, <code>⇒</code>. If the site can't find an arrow, it tells you what it saw and gives you an example.</p>
 
-  <h3>Calculating molar mass</h3>
-  <p>Each element has an atomic mass. Hydrogen is 1.008, carbon is 12.011, oxygen is 15.999. To get the molar mass of a formula, multiply each element's atomic mass by how many atoms of it appear, then add everything up. For H2O: (2 × 1.008) + (1 × 15.999) = 18.015 g/mol. That number is how many grams one mole of the substance weighs.</p>
+<h3>Why does the answer show coefficients like "5 O2"?</h3>
+<p>That is the balanced form. It means five molecules of O2. When the coefficient is 1, the site leaves it out, so you see <code>H2O</code> instead of <code>1 H2O</code>.</p>
 
-  <h3>Why does the arrow matter?</h3>
-  <p>The arrow separates reactants from products. The site accepts several forms: <code>-></code>, <code>=</code>, <code>→</code>, <code>⟶</code>, and a few others. If it cannot find one, it tells you what it saw and shows an example.</p>
+<h3>How do I write subscripts?</h3>
+<p>As plain numbers right after the element. <code>H2O</code>, not H₂O. <code>Fe2(SO4)3</code>, not Fe₂(SO₄)₃. Parentheses and brackets both work.</p>
 
-  <h3>Predicting products</h3>
-  <p>The "Find the products" tool works differently. It looks at the reactants you type and matches them against a database of known reaction types: combustion, single replacement, double replacement, synthesis, decomposition, and acid base neutralisation. If it finds a match, it proposes plausible products. This is a shortcut, not real chemistry. It cannot know every reaction, and it will get some exotic cases wrong. Use it as a starting point, then check the result by hand.</p>
+<h3>What does "Both sides need at least one species" mean?</h3>
+<p>It means the site could not find an arrow, so it thought one side of your equation was empty. Add <code>-&gt;</code> between reactants and products. For example: <code>H2 + O2 -&gt; H2O</code>. The error message now names the arrow it looked for, so it should be easier to spot.</p>
 
+<h3>Why did the product finder say it couldn't match my reaction?</h3>
+<p>It only knows a limited set of reaction types: combustion, acid base, single and double replacement, synthesis, and decomposition of carbonates, bicarbonates, and hydrogen peroxide. If you type something outside that list, it will tell you it can't match it rather than guessing wrong.</p>
 </main>
 
 <footer>
-  <div class="wrap">Stoichio. Free, no sign up, no tracking.</div>
+  <div class="wrap">Alina Fan</div>
 </footer>
 
 <script>
